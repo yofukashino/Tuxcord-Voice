@@ -26,8 +26,10 @@ Fix for Screenshare Audio on Offical Discord Linux Client
 ### Known Bugs
 
 - Default Input Volume gets to 100% when restarting stream without rejoining the voice chat.
-- [ ] Discord Becomes Unresponse and crashes sometimes when streaming
-- [ ] Discord Becomes Unresponse and crashes sometimes after picking audio source
+- Discord Becomes Unresponse and crashes sometimes when streaming
+- Discord Becomes Unresponse and crashes sometimes after picking audio source
+<sub>I can not figure out fixes for this bugs so help would be appreciated </sub>
+
 ---
 
 ### TODO
