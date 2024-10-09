@@ -36,10 +36,10 @@ Fix for Screenshare Audio on Offical Discord Linux Client
 ---
 
 ### TODO
-
+- [x] Make Sure Default Input gets removed from stream
 - [ ] Automated Installer
 - [ ] Refractor index.js
-- [ ] Make Sure Default Input gets removed from stream
+- [ ] Refractor audio_manager.sh
 ---
 
 
