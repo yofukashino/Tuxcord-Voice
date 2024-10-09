@@ -14,7 +14,7 @@ Fix for Screenshare Audio on Offical Discord Linux Client
 #### Requirements
 - [PipeWire](https://wiki.archlinux.org/title/PipeWire) (``Look up Installation for your specific distro.``)
 - [pipewire-pulse](https://wiki.archlinux.org/title/PipeWire#:~:text=Usage-,Audio,-PipeWire%20can%20be) (``Look up Installation for your specific distro.``)
-
+- [zenity](https://help.gnome.org/users/zenity/stable/) (``Look up Installation for your specific distro.``)
 
 #### Getting Started
 - Clone the Repository (``git clone <repo url>``)
