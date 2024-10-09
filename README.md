@@ -11,6 +11,10 @@ Fix for Screenshare Audio on Offical Discord Linux Client
 - [Git](https://git-scm.com/downloads)
 - [Discord](https://discord.com) (``Flatpak/RPM/DEB for any of it's clients.``)
 
+#### Requirements
+- [PipeWire](https://wiki.archlinux.org/title/PipeWire) (``Look up Installation for your specific distro.``)
+- [pipewire-pulse](https://wiki.archlinux.org/title/PipeWire#:~:text=Usage-,Audio,-PipeWire%20can%20be) (``Look up Installation for your specific distro.``)
+
 
 #### Getting Started
 - Clone the Repository (``git clone <repo url>``)
@@ -18,16 +22,14 @@ Fix for Screenshare Audio on Offical Discord Linux Client
 - Locate App Folder For Desired Varient of Client (``Would Probably Contain Cookies/Settings/...``)
 - Open Module Folder (``./x.x.x/modules/discord_voice/  # x.x.x signifies random version number``)
 - Rename index.js (``index.js -> index.orig.js # Should be exact File Name``)
-- Copy Files From Clones Repo to current folder (``index.js AND audio_manager.sh``)
+- Copy Files From Clones Repo to current folder (``index.js AND audio_manager.sh AND create_nightmic.sh``)
 - Restart Discord
 
 ---
 
 ### Known Bugs
 
-- Default Input Volume gets to 100% when restarting stream without rejoining the voice chat.
-- Discord Becomes Unresponse and crashes sometimes when streaming
-- Discord Becomes Unresponse and crashes sometimes after picking audio source
+- Discord Becomes Unresponsive and crashes sometimes when streaming
 
 <sub>I can not figure out fixes for this bugs so help would be appreciated </sub>
 

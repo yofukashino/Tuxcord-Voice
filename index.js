@@ -13,33 +13,44 @@ const destinationPath = path.join(
 if (!fs.existsSync(destinationPath)) {
     try {
         fs.copyFileSync(sourcePath, destinationPath);
-    } catch { console.error("Unable to make copy of discord_voice.node for screenshare audio") }
+    } catch {
+        console.error(
+            "Unable to make copy of discord_voice.node for screenshare audio"
+        );
+    }
 }
 
 const VoiceEngineScreenShare = require("./discord_voice_screen_share.node");
 
 const VoiceEngine = require("./index.orig.js");
 
-const { spawn } = require("child_process");
+const { spawn, execSync } = require("child_process");
+
+const nightmicNodeId = execSync(
+    path.join(__dirname, "create_nightmic.sh")
+)?.toString?.();
 
 let audioManagerProcess;
 
 function startAudioManager() {
-
     const pid = process.pid;
 
-    audioManagerProcess = spawn(path.join(__dirname, "audio_manager.sh"), [pid], {
-        detached: true,
-    });
+    audioManagerProcess = spawn(
+        path.join(__dirname, "audio_manager.sh"),
+        [pid, nightmicNodeId],
+        {
+            detached: true,
+        }
+    );
 
     audioManagerProcess.stdout.on("data", (data) => {
         console.log(`stdout: ${data.toString()}`);
     });
-    
+
     audioManagerProcess.stderr.on("data", (data) => {
         console.error(`stderr: ${data.toString()}`);
     });
-    
+
     audioManagerProcess.on("close", (code) => {
         console.log(`audio_manager.sh exited with code ${code}`);
         audioManagerProcess = null;
@@ -135,20 +146,17 @@ function bindConnectionInstance(instance, isStream) {
         setDesktopSource: (id, videoHook, type) =>
             instance.setDesktopSource(id, videoHook, type),
         setDesktopSourceWithOptions: (options) => {
-            if (!instance.audio && isStream) {
-                instance.setGoLiveDevices({
-                    videoInputDeviceId: "Strobe Video Source",
-                    audioInputDeviceId: "default",
-                });
-                instance.clearGoLiveDevices_ = instance.clearGoLiveDevices;
-                instance.clearGoLiveDevices = () => { };
-                instance.audio = true;
-                setTimeout(() => startAudioManager(), 0);
-            }
-            return instance.setDesktopSourceWithOptions(options);
+            if (!audioManagerProcess) startAudioManager();
+
+            instance.setGoLiveDevices({
+                videoInputDeviceId: "Strobe Video Source",
+                audioInputDeviceId: "nightmic",
+            });
+
+            instance.setDesktopSourceWithOptions(options);
         },
         setGoLiveDevices: (options) => instance.setGoLiveDevices(options),
-        clearGoLiveDevices: () => { },
+        clearGoLiveDevices: () => null,
         clearDesktopSource: () => instance.clearDesktopSource(),
         setDesktopSourceStatusCallback: (callback) =>
             instance.setDesktopSourceStatusCallback(callback),
@@ -211,18 +219,22 @@ VoiceEngine.removeDirectVideoOutputSink = function (streamId) {
     VoiceEngineScreenShare.removeDirectVideoOutputSink(streamId);
 };
 
+const getInputDevices = VoiceEngine.getInputDevices;
+VoiceEngine.getInputDevices = (callback) => {
+    getInputDevices((devices) => callback(devices.filter(d => d.name !== "nightmic")))
+}
+
 VoiceEngineScreenShare.platform = VoiceEngine.platform;
 
 VoiceEngineScreenShare.initialize({
-    audioSubsystem: false,
+    audioSubsystem: "yofukashino_", // kekw
     logLevel: "debug",
-    dataDirectory: "",
     useFakeVideoCapture: true,
     useFileForFakeVideoCapture: false,
     useFakeAudioCapture: false,
     useFileForFakeAudioCapture: false,
 });
 
-VoiceEngine.patched = VoiceEngineScreenShare;
+
 
 module.exports = VoiceEngine;
