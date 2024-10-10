@@ -6,7 +6,9 @@ if [[ -z "$1" || -z "$2" ]]; then
 fi
 
 PID="$1"
+PARENT_PID=$(ps -o ppid= -p "$1")
 nightmic_id="$2"
+system_name=$(hostname)
 selected_app_ids=()
 
 fetch_audio_nodes() {
@@ -25,6 +27,23 @@ unlink_audio() {
     pw-link -d "$outputId" "$inputId"
 }
 
+get_window_title() {
+    local pid=$1
+    local ppid=$2
+    if [ "$XDG_SESSION_TYPE" = "x11" ]; then
+        if command -v wmctrl &>/dev/null; then
+            title=$(wmctrl -lp | awk -v pid="$pid" -v ppid="$ppid" '$3 == pid || $3 == ppid' | sed "s/.*$system_name//")
+        fi
+    elif [ "$XDG_SESSION_TYPE" = "wayland" ]; then
+        title=$(swaymsg -t get_tree | jq -r --argjson pid "$pid" ppid "$ppid" '.. | select(.pid == $pid) | select(.ppid == $ppid) | .name')
+    fi
+    if [ -z "$title" ]; then
+        echo "null"
+    else
+        echo "$title"
+    fi
+}
+
 display_ui() {
     local nodes=$(fetch_audio_nodes)
 
@@ -33,16 +52,28 @@ display_ui() {
     while IFS= read -r node; do
         id=$(echo "$node" | jq -r '.id')
         media_class=$(echo "$node" | jq -r '.info.props["media.class"]')
+        app_pid=$(echo "$node" | jq -r '.info.props["application.process.id"]')
         app_name=$(echo "$node" | jq -r '.info.props["application.name"]')
         app_process=$(echo "$node" | jq -r '.info.props["application.process.binary"]')
         device_desc=$(echo "$node" | jq -r '.info.props["device.profile.description"]')
         node_nick=$(echo "$node" | jq -r '.info.props["node.nick"]')
 
         if [[ "$media_class" == "Stream/Output/Audio" ]]; then
-            if [[ "$app_name" == "$app_process" ]]; then
-                name="$app_name"
+            if [[ "$app_pid" != "null" ]]; then
+                app_parent_pid=$(ps -o ppid= -p "$app_pid")
+                window_title=$(get_window_title "$app_pid" "$app_parent_pid")
             else
-                name=$(printf '%s (%s)' "$app_name" "$app_process")
+                app_parent_pid=
+                window_title=
+            fi
+            if [[ "$window_title" == "null" || -z $window_title ]]; then
+                if [[ "$app_name" == "$app_process" ]]; then
+                    name="$app_name"
+                else
+                    name=$(printf '%s (%s)' "$app_name" "$app_process")
+                fi
+            else
+                name="$window_title"
             fi
         else
             name=$(printf '%s (%s)' "$device_desc" "$node_nick")
@@ -54,7 +85,7 @@ display_ui() {
             selection_state="FALSE"
         fi
 
-        if [[ -n "$id" && -n "$name" && "$id" != "null" && "$name" != "null" ]]; then
+        if [[ -n "$id" && -n "$name" && "$id" != "null" && "$name" != "null" && $app_parent_pid != $PARENT_PID ]]; then
             checklist_items+=("$selection_state" "$id" "$name")
         fi
     done < <(echo "$nodes" | jq -c '.[]')
@@ -88,7 +119,6 @@ manage_pw_links() {
     for id in $old_audio_ids; do
         unlink_audio "$id" "$nightmic_id"
     done
-
     input_ports=$(pw-dump | jq "[.[] | select(.info.props[\"node.id\"] == $nightmic_id) | select(.info.direction == \"input\") | .id] | .[]")
 
     for id in "${selected_ids[@]}"; do
@@ -119,17 +149,18 @@ unlink_nightmic() {
     done
 }
 
-start() {
-    while true; do
-        selected=$(display_ui)
-        if [[ "$selected" != "null" && (-n "$selected" || -n "$selected_app_ids") ]]; then
-            IFS='|' read -ra selected_ids <<<"$selected"
-            manage_pw_links "${selected_ids[@]}"
+unlink_nightmic
 
+while true; do
+    selected=$(display_ui)
+    if [[ "$selected" != "null" && (-n "$selected" || -n "$selected_app_ids") ]]; then
+        IFS='|' read -ra selected_ids <<<"$selected"
+        if [[ "$selected_app_ids" != "${selected_ids[@]}" ]]; then
+        manage_pw_links "${selected_ids[@]}"
         fi
-    done
+        sleep 1
+    else
+        sleep 1
+    fi
+done
 
-}
-
-unlink_nightmic &
-start &
