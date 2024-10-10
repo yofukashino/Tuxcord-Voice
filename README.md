@@ -29,6 +29,7 @@ Fix for Screenshare Audio on Offical Discord Linux Client
 
 ### Known Bugs
 
+- Discord Becomes Unresponse and crashes sometimes after picking audio source
 - Discord Becomes Unresponsive and crashes sometimes when streaming
 
 <sub>I can not figure out fixes for this bugs so help would be appreciated </sub>
