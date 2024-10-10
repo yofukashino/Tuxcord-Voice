@@ -122,7 +122,6 @@ unlink_nightmic() {
 start() {
     while true; do
         selected=$(display_ui)
-        pw
         if [[ "$selected" != "null" && (-n "$selected" || -n "$selected_app_ids") ]]; then
             IFS='|' read -ra selected_ids <<<"$selected"
             manage_pw_links "${selected_ids[@]}"
