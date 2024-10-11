@@ -32,7 +32,7 @@ get_window_title() {
     local ppid=$2
     if [ "$XDG_SESSION_TYPE" = "x11" ]; then
         if command -v wmctrl &>/dev/null; then
-            title=$(wmctrl -lp | awk -v pid="$pid" -v ppid="$ppid" '$3 == pid || $3 == ppid' | sed "s/.*$system_name//")
+            title=$(wmctrl -lp | awk -v pid="$pid" -v ppid="$ppid" '$3 != 0 && ($3 == pid || $3 == ppid)' | sed "s/.*$system_name//" | head -n 1)
         fi
     elif [ "$XDG_SESSION_TYPE" = "wayland" ]; then
         title=$(swaymsg -t get_tree | jq -r --argjson pid "$pid" ppid "$ppid" '.. | select(.pid == $pid) | select(.ppid == $ppid) | .name')
@@ -156,11 +156,10 @@ while true; do
     if [[ "$selected" != "null" && (-n "$selected" || -n "$selected_app_ids") ]]; then
         IFS='|' read -ra selected_ids <<<"$selected"
         if [[ "$selected_app_ids" != "${selected_ids[@]}" ]]; then
-        manage_pw_links "${selected_ids[@]}"
+            manage_pw_links "${selected_ids[@]}"
         fi
         sleep 1
     else
         sleep 1
     fi
 done
-
