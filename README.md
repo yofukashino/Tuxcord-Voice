@@ -1,5 +1,6 @@
 ### Tuxcord Voice
-
+- NOTICE: In No shape, way, OR form this project is affiliated to discord, It is just third party a modification.
+  
 Fix for Screenshare Audio on Offical Discord Linux Client
 
 - Disclaimer: If you are not comfortable with changing config files for programs or using git then this project may not be ready for you yet. 
